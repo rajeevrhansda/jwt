@@ -17,16 +17,16 @@ const users = [
         isAdmin: true
     }
 ]
-
-app.post("/api/login", (req,res)=>{
-    const {username , password} = req.body;
-    const user = users.find((u)=>{
+//GET USER
+app.post("/api/login", (req, res) => {
+    const { username, password } = req.body;
+    const user = users.find((u) => {
         return u.username === username && u.password === password;
     });
-    if(user){
+    if (user) {
         //GENERATE ACCESS TOKEN
         const accessToken = jwt.sign(
-            {id: user.id,isAdmin: user.isAdmin},
+            { id: user.id, isAdmin: user.isAdmin },
             "mySecretKey"
         );
         res.json({
@@ -35,9 +35,38 @@ app.post("/api/login", (req,res)=>{
             accessToken
         });
     }
-    else{
+    else {
         res.status(400).json("Username or password is incorrect")
     }
 });
+
+
+//VERIFY TOKEN
+const verify = (req, res, next) => {
+    const authHeader = req.headers.authorization;
+    if (authHeader) {
+        const token = authHeader.split(" ")[1];
+
+        jwt.verify(token, "mySecretKey", (err, payload) => {
+            if (err) {
+                return res.status(403).json("Token is invalid", err);
+            }
+            req.user = payload;
+            next();
+        })
+    } else {
+        res.status(401).json("you are not authenticated!")
+    }
+}
+
+//DELETE USER
+app.delete("/api/users/:userId", verify, (req,res)=>{
+    if(req.user.id === req.params.userId || req.user.isAdmin){
+        res.status(200).json("User has been deleted");
+    }else{
+        res.status(403).json("You are not allowed to delete this user!");
+    }
+})
+
 
 app.listen(5000, () => console.log("Backend server is running"));
