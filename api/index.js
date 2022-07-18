@@ -5,16 +5,16 @@ app.use(express.json());
 
 const users = [
     {
-        id: 1,
+        id: '1',
         username: "John",
         password: "john0908",
         isAdmin: true
     },
     {
-        id: 1,
+        id: '2',
         username: "Jane",
         password: "jane0908",
-        isAdmin: true
+        isAdmin: false
     }
 ]
 //GET USER
@@ -47,26 +47,27 @@ const verify = (req, res, next) => {
     if (authHeader) {
         const token = authHeader.split(" ")[1];
 
-        jwt.verify(token, "mySecretKey", (err, payload) => {
+        jwt.verify(token, "mySecretKey", (err, user) => {
             if (err) {
-                return res.status(403).json("Token is invalid", err);
+                return res.status(403).json("Token is not valid!");
             }
-            req.user = payload;
+
+            req.user = user;
             next();
-        })
+        });
     } else {
-        res.status(401).json("you are not authenticated!")
+        res.status(401).json("You are not authenticated!");
     }
-}
+};
 
 //DELETE USER
-app.delete("/api/users/:userId", verify, (req,res)=>{
-    if(req.user.id === req.params.userId || req.user.isAdmin){
-        res.status(200).json("User has been deleted");
-    }else{
+app.delete("/api/users/:userId", verify, (req, res) => {
+    if (req.user.id === req.params.userId || req.user.isAdmin) {
+        res.status(200).json("User has been deleted.");
+    } else {
         res.status(403).json("You are not allowed to delete this user!");
     }
-})
+});
 
 
 app.listen(5000, () => console.log("Backend server is running"));
